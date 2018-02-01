@@ -21,6 +21,7 @@ type Gitlab struct {
 	ApiPath      string
 	RepoFeedPath string
 	Token        string
+	HTTPAuth	 string
 	Client       *http.Client
 }
 
@@ -33,7 +34,7 @@ var (
 		`If set to true, gitlab client will skip certificate checking for https, possibly exposing your system to MITM attack.`)
 )
 
-func NewGitlab(baseUrl, apiPath, token string) *Gitlab {
+func NewGitlab(baseUrl, apiPath, token string, httpAuth string) *Gitlab {
 	config := &tls.Config{InsecureSkipVerify: *skipCertVerify}
 	tr := &http.Transport{
 		Proxy:           http.ProxyFromEnvironment,
@@ -46,6 +47,7 @@ func NewGitlab(baseUrl, apiPath, token string) *Gitlab {
 		ApiPath: apiPath,
 		Token:   token,
 		Client:  client,
+		HTTPAuth:httpAuth,
 	}
 }
 
@@ -155,6 +157,8 @@ func (g *Gitlab) buildAndExecRequestRaw(method, url, opaque string, body []byte)
 		panic("Error while building gitlab request")
 	}
 
+	req.Header.Add("Authorization", g.HTTPAuth)
+	
 	if len(opaque) > 0 {
 		req.URL.Opaque = opaque
 	}
